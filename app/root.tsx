@@ -10,6 +10,7 @@ import {
   useMatch,
 } from 'react-router';
 import { I18nProvider, RouterProvider } from 'react-aria-components';
+import { useMemo } from 'react';
 
 import type { Route } from './+types/root';
 import stylesheet from './app.css?url';
@@ -32,6 +33,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <Meta />
         <Links />
+        <PlausibleScript />
       </head>
       <body>
         {children}
@@ -83,3 +85,18 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
 }
 
 const DEFAULT_LOCALE = 'en';
+
+function PlausibleScript() {
+  const props = useMemo(() => {
+    const PLAUSIBLE_URL = import.meta.env.VITE_PLAUSIBLE_URL;
+    const PLAUSIBLE_DOMAIN = import.meta.env.VITE_PLAUSIBLE_DOMAIN;
+    if (PLAUSIBLE_URL && PLAUSIBLE_DOMAIN) {
+      return { 'data-domain': PLAUSIBLE_DOMAIN, src: PLAUSIBLE_URL };
+    }
+    return null;
+  }, []);
+  if (props) {
+    return <script defer {...props} />;
+  }
+  return null;
+}
