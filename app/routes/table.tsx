@@ -7,6 +7,7 @@ import { ProgressBar } from '~/components/ui/progress';
 
 import { getTable, getRows, updateView } from '~/core/store.client';
 import { ViewSchema } from '~/core/schema';
+import { processSubmission, useActionFetcher } from '~/lib/action';
 import type { BreadcrumbFn } from './layout';
 
 export function meta({ data }: Route.MetaArgs) {
@@ -31,18 +32,16 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs) {
   return { table, rows };
 }
 
-export async function clientAction({
-  params,
-  request,
-}: Route.ClientActionArgs) {
-  const data = await request.json();
-  const view = ViewSchema.parse(data);
-  await updateView(params.id, view);
-  return { ok: true };
+export function clientAction({ params, request }: Route.ClientActionArgs) {
+  return processSubmission({
+    request,
+    schema: ViewSchema,
+    resolve: (data) => updateView(params.id, data).map(() => true),
+  });
 }
 
 export default function TableRoute({ loaderData }: Route.ComponentProps) {
-  const fetcher = useFetcher();
+  const { submit } = useActionFetcher();
   return (
     <Suspense
       fallback={
@@ -62,10 +61,7 @@ export default function TableRoute({ loaderData }: Route.ComponentProps) {
             data={rows}
             view={loaderData.table.view}
             onChange={(view) => {
-              fetcher.submit(ViewSchema.parse(view), {
-                method: 'POST',
-                encType: 'application/json',
-              });
+              submit(view);
             }}
           />
         )}

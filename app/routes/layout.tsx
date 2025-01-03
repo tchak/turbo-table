@@ -1,4 +1,4 @@
-import { Outlet, useMatches, type UIMatch } from 'react-router';
+import { Outlet, useMatches, useMatch, type UIMatch } from 'react-router';
 import {
   Breadcrumbs,
   BreadcrumbItem,
@@ -8,6 +8,22 @@ import {
 } from '~/components/ui/breadcrumbs';
 
 export default function Layout() {
+  const isTable = !!useMatch('/table/:id');
+  return (
+    <div className="h-screen flex flex-col">
+      <header className="p-4 flex-shrink-0">
+        <Navigation />
+      </header>
+      <main
+        className={`flex flex-col flex-1 ${isTable ? 'overflow-hidden' : ''}`}
+      >
+        <Outlet />
+      </main>
+    </div>
+  );
+}
+
+function Navigation() {
   const matches = useMatches();
   const breadcrumbs: Breadcrumb[] = [];
   for (const match of matches) {
@@ -16,34 +32,38 @@ export default function Layout() {
       breadcrumbs.push(breadcrumb);
     }
   }
-  const page = breadcrumbs.pop();
 
-  return (
-    <div className="h-screen flex flex-col">
-      <header className="p-2 flex-shrink-0">
-        <Breadcrumbs>
-          <BreadcrumbItem>
-            <BreadcrumbLink href="/">Turbo Table</BreadcrumbLink>
+  if (breadcrumbs.length) {
+    const page = breadcrumbs.pop();
+
+    return (
+      <Breadcrumbs>
+        <BreadcrumbItem>
+          <BreadcrumbLink href="/">Turbo Table</BreadcrumbLink>
+          <BreadcrumbSeparator />
+        </BreadcrumbItem>
+        {breadcrumbs.map(({ title, path }) => (
+          <BreadcrumbItem key={path}>
+            <BreadcrumbLink href={path}>{title}</BreadcrumbLink>
             <BreadcrumbSeparator />
           </BreadcrumbItem>
-          {breadcrumbs.map(({ title, path }) => (
-            <BreadcrumbItem key={path}>
-              <BreadcrumbLink href={path}>{title}</BreadcrumbLink>
-              <BreadcrumbSeparator />
-            </BreadcrumbItem>
-          ))}
-          {page ? (
-            <BreadcrumbItem>
-              <BreadcrumbPage>{page.title}</BreadcrumbPage>
-            </BreadcrumbItem>
-          ) : null}
-        </Breadcrumbs>
-      </header>
-      <main className="flex flex-col flex-1 overflow-hidden">
-        <Outlet />
-      </main>
-    </div>
-  );
+        ))}
+        {page ? (
+          <BreadcrumbItem>
+            <BreadcrumbPage>{page.title}</BreadcrumbPage>
+          </BreadcrumbItem>
+        ) : null}
+      </Breadcrumbs>
+    );
+  } else {
+    return (
+      <Breadcrumbs>
+        <BreadcrumbItem>
+          <BreadcrumbPage>Turbo Table</BreadcrumbPage>
+        </BreadcrumbItem>
+      </Breadcrumbs>
+    );
+  }
 }
 
 type Breadcrumb = { title: string; path: string };

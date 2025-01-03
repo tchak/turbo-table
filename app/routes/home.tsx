@@ -1,66 +1,40 @@
 import type { Route } from './+types/home';
-import { redirect, useFetcher } from 'react-router';
 import { TrashIcon } from 'lucide-react';
-import { Button } from '~/components/ui/button';
+import { z } from 'zod';
 
+import { Button } from '~/components/ui/button';
 import { TurboUpload } from '~/components/turbo-upload';
 import { GridList, GridListItem } from '~/components/ui/grid-list';
 
 import { getTables, importTable, deleteTable } from '~/core/store.client';
+import { processSubmission, useActionFetcher } from '~/lib/action';
 
 export function meta({}: Route.MetaArgs) {
   return [{ title: 'Turbo Table' }];
 }
 
 export async function clientLoader({}: Route.ClientLoaderArgs) {
-  const tables = await getTables();
-  return { tables };
+  return { tables: await getTables() };
 }
 
-export async function clientAction({ request }: Route.ClientActionArgs) {
-  const formData = await request.formData();
-  const action = formData.get('action');
-  if (action == 'import') {
-    const file = formData.get('file');
-    if (file && file instanceof File) {
-      const tableId = await importTable(file);
-      return redirect(`/table/${tableId}`);
-    }
-    return { error: 'No file provided' };
-  } else if (action == 'delete') {
-    const tableId = formData.get('tableId');
-    if (typeof tableId == 'string') {
-      await deleteTable(tableId);
-      return redirect('/');
-    }
-    return { error: 'No table ID provided' };
-  }
-  return { error: 'No action provided' };
+export function clientAction({ request }: Route.ClientActionArgs) {
+  return processSubmission({
+    request,
+    schema,
+    resolve(data) {
+      switch (data.action) {
+        case 'import':
+          return importTable(data.file).map((tableId) => `/table/${tableId}`);
+        case 'delete': {
+          return deleteTable(data.tableId).map(() => '/');
+        }
+      }
+    },
+  });
 }
 
 export default function Home({ loaderData }: Route.ComponentProps) {
-  const fetcher = useFetcher();
-  const importTable = (files: File[]) => {
-    const file = files.at(0);
-    if (file) {
-      const formData = new FormData();
-      formData.append('action', 'import');
-      formData.append('file', file);
-      fetcher.submit(formData, {
-        method: 'POST',
-        encType: 'multipart/form-data',
-      });
-    }
-  };
-  const deleteTable = (tableId: string) => {
-    const formData = new FormData();
-    formData.append('action', 'delete');
-    formData.append('tableId', tableId);
-    fetcher.submit(formData, {
-      method: 'POST',
-    });
-  };
-  const isSubmitting = fetcher.state == 'submitting';
+  const { isSubmitting, submit } = useActionFetcher();
 
   return (
     <div className="flex flex-col gap-10 px-4">
@@ -71,13 +45,14 @@ export default function Home({ loaderData }: Route.ComponentProps) {
       >
         {(table) => (
           <GridListItem textValue={table.name} href={`/table/${table.id}`}>
-            <div className="flex items-center justify-between w-full">
-              <div>{table.name}</div>
+            <div className="flex items-center justify-between gap-4 w-full">
+              <div className="truncate">{table.name}</div>
               <Button
                 variant="destructive"
                 size="icon"
-                onPress={() => deleteTable(table.id)}
+                onPress={() => submit({ action: 'delete', tableId: table.id })}
                 isPending={isSubmitting}
+                className="flex-shrink-0"
               >
                 <TrashIcon />
               </Button>
@@ -87,21 +62,31 @@ export default function Home({ loaderData }: Route.ComponentProps) {
       </GridList>
       <TurboUpload
         label="Upload a file"
-        onSelect={importTable}
-        description="Or drag and drop CSV, XLSX, ODS, Numbers up to 5MB"
+        onSelect={(files) => {
+          const file = files.at(0);
+          if (file) {
+            submit({ action: 'import', file });
+          }
+        }}
+        description="Or drag & drop CSV, XLSX, ODS, Numbers up to 5MB"
         acceptedFileTypes={acceptedFileTypes}
         maxFileSize={maxFileSize}
-        className="w-1/3 mx-auto py-6 h-auto gap-6"
+        className="mx-auto py-6 h-auto gap-6 min-w-full md:min-w-96"
         isDisabled={isSubmitting}
       />
     </div>
   );
 }
 
-const maxFileSize = 5 * 1024 * 1024; // 10MB
+const maxFileSize = 5 * 1024 * 1024; // 5MB
 const acceptedFileTypes = [
   'text/csv',
   'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
   'application/vnd.oasis.opendocument.spreadsheet',
   'application/vnd.apple.numbers',
 ];
+
+const schema = z.discriminatedUnion('action', [
+  z.object({ action: z.literal('import'), file: z.instanceof(File) }),
+  z.object({ action: z.literal('delete'), tableId: z.string().uuid() }),
+]);

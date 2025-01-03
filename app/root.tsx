@@ -14,6 +14,7 @@ import { useMemo } from 'react';
 
 import type { Route } from './+types/root';
 import stylesheet from './app.css?url';
+import { ToastContainer } from '~/components/ui/toast';
 
 export const links: Route.LinksFunction = () => [
   { rel: 'stylesheet', href: stylesheet },
@@ -50,6 +51,7 @@ export default function App() {
     <I18nProvider locale={DEFAULT_LOCALE}>
       <RouterProvider navigate={navigate} useHref={useHref}>
         <Outlet />
+        <ToastContainer />
       </RouterProvider>
     </I18nProvider>
   );

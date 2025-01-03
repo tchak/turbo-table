@@ -1,16 +1,9 @@
-import type {
-  ColumnSizingState,
-  VisibilityState,
-  GroupingState,
-  SortingState,
-  PaginationState,
-} from '@tanstack/react-table';
-
 import { Table, ResizableTableContainer } from '~/components/ui/table';
 import { useTurboTable } from './hooks';
 import { TurboTableToolbar } from './turbo-table-toolbar';
 import { TurboTableHeader } from './turbo-table-header';
 import { TurboTableBody } from './turbo-table-body';
+import { TurboPagination } from './turbo-pagination';
 
 export type ColumnType = 'string' | 'number' | 'boolean' | 'date' | 'json';
 
@@ -28,11 +21,11 @@ export type Row = {
 };
 
 export type View = {
-  sort?: SortingState[0];
-  group?: GroupingState[0];
-  pageSize: PaginationState['pageSize'];
-  columnVisibility: VisibilityState;
-  columnSizing: ColumnSizingState;
+  sort?: { desc: boolean; id: string };
+  group?: string;
+  pageSize: number;
+  columnVisibility: Record<string, boolean>;
+  columnSizing: Record<string, number>;
 };
 
 export function TurboTable({
@@ -54,7 +47,7 @@ export function TurboTable({
   });
 
   return (
-    <div className="flex flex-col gap-2 h-full">
+    <div className="flex flex-col h-full">
       <TurboTableToolbar table={table} />
       <ResizableTableContainer
         onResize={onResize}
@@ -70,7 +63,7 @@ export function TurboTable({
           <TurboTableBody table={table} />
         </Table>
       </ResizableTableContainer>
-      {/* <div className="flex-shrink-0">Footer</div> */}
+      {table.getPageCount() > 1 ? <TurboPagination table={table} /> : null}
     </div>
   );
 }

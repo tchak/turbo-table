@@ -7,61 +7,95 @@ import {
   type StoreNames,
   type StoreValue,
 } from 'idb';
+import * as R from 'remeda';
+import * as Task from 'true-myth/task';
 
-import type { Row, Table, Value, View } from './schema';
+import { createActionResult, createActionTask } from '~/lib/action';
+import type { Column, Row, Table, Value, View } from './schema';
 
-export async function importTable(file: File) {
-  const read = await import('./sheet').then(({ read }) => read);
-  const result = await file.text().then((text) => read(text));
+export function importTable(file: File) {
+  return readFile(file)
+    .andThen(parseSheet)
+    .andThen((result) =>
+      createTable({
+        name: result.title || file.name,
+        columns: result.columns,
+        data: result.data,
+      })
+    );
+}
 
+export function createTable({
+  name,
+  columns,
+  data,
+}: {
+  name: string;
+  columns: Column[];
+  data?: Row['data'][];
+}) {
+  const createdAt = new Date();
   const view: View = {
     pageSize: 25,
     columnSizing: {},
     columnVisibility: {},
   };
-  const createdAt = new Date();
   const table: Table = {
     id: crypto.randomUUID(),
-    name: result.title ?? file.name,
-    columns: result.columns,
+    name,
+    columns,
     view,
     createdAt,
     updatedAt: createdAt,
   };
-  const rows: Row[] = result.data.map((data) => ({
+  const rows: Row[] = (data ?? []).map((data) => ({
     id: crypto.randomUUID(),
     createdAt,
     updatedAt: createdAt,
     data,
   }));
-
-  await getStore<TableStore>('tables').setItem(table);
-  const store = getStore<RowStore>('rows', tableKey(table.id));
-  for (const row of rows) {
-    await store.setItem(row);
-  }
-
-  return table.id;
+  return createActionTask(
+    (async () => {
+      await getStore<TableStore>('tables').setItem(table);
+      const store = getStore<RowStore>('rows', tableKey(table.id));
+      for (const row of rows) {
+        await store.setItem(row);
+      }
+      return table.id;
+    })(),
+    'Failed to import table'
+  );
 }
 
 export function getTable(tableId: string): Promise<Table | undefined> {
   return getStore<TableStore>('tables').getItem(tableId);
 }
 
-export function getTables(): Promise<Table[]> {
-  return getStore<TableStore>('tables').getAll();
+export async function getTables(): Promise<Table[]> {
+  const tables = await getStore<TableStore>('tables').getAll();
+  return R.sortBy(tables, [R.prop('createdAt'), 'desc']);
 }
 
-export async function deleteTable(tableId: string): Promise<void> {
-  await getStore<TableStore>('tables').removeItem(tableId);
-  await getStore<RowStore>('rows', tableKey(tableId)).destroy();
+export function deleteTable(tableId: string) {
+  return createActionTask(
+    (async () => {
+      await getStore<TableStore>('tables').removeItem(tableId);
+      await getStore<RowStore>('rows', tableKey(tableId)).destroy();
+    })(),
+    'Failed to delete table'
+  );
 }
 
-export async function updateView(tableId: string, view: View): Promise<void> {
-  const table = await getTable(tableId);
-  if (table) {
-    await getStore<TableStore>('tables').setItem({ ...table, view });
-  }
+export function updateView(tableId: string, view: View) {
+  return createActionTask(
+    (async () => {
+      const table = await getTable(tableId);
+      if (table) {
+        await getStore<TableStore>('tables').setItem({ ...table, view });
+      }
+    })(),
+    'Failed to update view'
+  );
 }
 
 export function getRow(
@@ -162,4 +196,21 @@ function createStore<Schema extends DBSchema>(
 
 function tableKey(id: string) {
   return `table/${id}`;
+}
+
+function parseSheet(input: string | ArrayBuffer) {
+  return createActionTask(
+    import('./sheet'),
+    'Failed to import SheetJS'
+  ).andThen(({ read }) =>
+    Task.Task.fromResult(
+      createActionResult(() => read(input), 'Failed to parse sheet')
+    )
+  );
+}
+
+function readFile(file: File) {
+  const promise: Promise<string | ArrayBuffer> =
+    file.type == 'text/csv' ? file.text() : file.arrayBuffer();
+  return createActionTask(promise, 'Failed to read file');
 }

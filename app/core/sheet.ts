@@ -5,17 +5,24 @@ import type { Column, Row, Value } from './schema';
 export function read(input: string | ArrayBuffer): ParserResult {
   const workbook = XLSX.read(input, {
     type: typeof input == 'string' ? 'string' : 'buffer',
+    dense: true,
     sheets: 0,
     cellFormula: false,
     cellDates: true,
     cellNF: true,
-    dense: true,
   });
+
   const sheet = workbook.Sheets[workbook.SheetNames[0]];
   const data = XLSX.utils.sheet_to_json<Row['data']>(sheet, {});
   const title = workbook.Props?.Title;
   const headers = sheet['!data']?.at(0) ?? [];
   const row1 = sheet['!data']?.at(1) ?? [];
+
+  for (let i = 0; i < headers.length; i++) {
+    if (!headers[i]) {
+      headers[i] = { w: '', t: 's', v: '' };
+    }
+  }
 
   const typeMap = Object.fromEntries(
     headers.map((header, index) => {
@@ -70,10 +77,9 @@ export function read(input: string | ArrayBuffer): ParserResult {
     columns,
     data: data.map((data) =>
       Object.fromEntries(
-        Object.entries(data).map(([name, value]) => [
-          idMap[name],
-          transformMap[name](value),
-        ])
+        Object.entries(data)
+          .filter(([name]) => idMap[name])
+          .map(([name, value]) => [idMap[name], transformMap[name](value)])
       )
     ),
   };

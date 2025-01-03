@@ -41,10 +41,8 @@ export function useTurboTable({
   view: View;
   onChange?: (view: View) => void;
 }) {
-  const [autoResetPageIndex] = useSkipper();
-
   const table = useReactTable({
-    autoResetPageIndex,
+    autoResetPageIndex: false,
     columns: useColumns(columns),
     data,
     getRowId: (row) => row.id,
@@ -75,21 +73,6 @@ export function useTurboTable({
     onSortChange,
     onResize,
   };
-}
-
-function useSkipper() {
-  const shouldSkipRef = useRef(false);
-  const shouldSkip = shouldSkipRef.current;
-
-  const skip = useCallback(() => {
-    shouldSkipRef.current = false;
-  }, []);
-
-  useEffect(() => {
-    shouldSkipRef.current = true;
-  });
-
-  return [shouldSkip, skip] as const;
 }
 
 function useRowSelectionState<T extends RowData>(table: Table<T>) {
@@ -198,6 +181,7 @@ type State = Pick<
 
 function useTableState(view: View, onChange?: (view: View) => void) {
   const initialState = useMemo(() => viewStateToTableState(view), [view]);
+  const lastViewState = useRef(view);
   const [sorting, onSortingChange] = useState(() => initialState.sorting);
   const [grouping, onGroupingChange] = useState(() => initialState.grouping);
   const [pagination, onPaginationChange] = useState(
@@ -209,24 +193,23 @@ function useTableState(view: View, onChange?: (view: View) => void) {
   const [columnSizing, onColumnSizingChange] = useState(
     () => initialState.columnSizing
   );
-  const state = useMemo<State>(
-    () => ({
+  const [state, viewState] = useMemo<[State, View]>(() => {
+    const state = {
       sorting,
       grouping,
       pagination,
       columnVisibility,
       columnSizing,
-    }),
-    [sorting, grouping, pagination, columnVisibility, columnSizing]
-  );
-  const lastState = useRef(state);
+    };
+    return [state, tableStateToViewState(state)];
+  }, [sorting, grouping, pagination, columnVisibility, columnSizing]);
 
   useEffect(() => {
-    if (!isEqual(lastState.current, state)) {
-      lastState.current = state;
-      onChange?.(tableStateToViewState(state));
+    if (onChange && !isEqual(lastViewState.current, viewState)) {
+      lastViewState.current = viewState;
+      onChange(viewState);
     }
-  }, [state]);
+  }, [viewState]);
 
   return {
     state,
