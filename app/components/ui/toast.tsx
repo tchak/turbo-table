@@ -7,7 +7,8 @@ import { CircleXIcon } from 'lucide-react';
 import { Button } from '~/components/ui/button';
 
 export interface ToastContent {
-  message: string;
+  title: string;
+  description?: string;
 }
 
 export const toastQueue = new ToastQueue<ToastContent>({
@@ -35,11 +36,13 @@ interface ToastProps<T> extends AriaToastProps<T> {
 
 function Toast({ state, ...props }: ToastProps<ToastContent>) {
   const ref = useRef(null);
-  const { toastProps, contentProps, titleProps, closeButtonProps } = useToast(
-    props,
-    state,
-    ref
-  );
+  const {
+    toastProps,
+    contentProps,
+    titleProps,
+    descriptionProps,
+    closeButtonProps,
+  } = useToast(props, state, ref);
   return (
     <div
       {...toastProps}
@@ -53,7 +56,12 @@ function Toast({ state, ...props }: ToastProps<ToastContent>) {
       }}
     >
       <div {...contentProps}>
-        <div {...titleProps}>{props.toast.content.message}</div>
+        <div {...titleProps}>{props.toast.content.title}</div>
+        {props.toast.content.description ? (
+          <div className="text-sm" {...descriptionProps}>
+            {props.toast.content.description}
+          </div>
+        ) : null}
       </div>
       <Button variant="ghost" size="icon" {...closeButtonProps}>
         <CircleXIcon className="w-5 h-5" />

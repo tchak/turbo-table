@@ -76,7 +76,7 @@ const Column = ({ className, children, ...props }: ColumnProps) => (
           {allowsSorting && <ArrowUpDown className="ml-2 size-4" />}
         </Group>
         {props.isResizable && (
-          <ColumnResizer className="data-[focus-visible]:ring-rin box-content h-5 w-px translate-x-[8px] cursor-col-resize rounded bg-neutral-500 bg-clip-content px-[8px]  py-1 focus-visible:outline-none data-[resizing]:w-[2px] data-[resizing]:bg-neutral-900 data-[resizing]:pl-[7px] data-[focus-visible]:ring-1 data-[focus-visible]:ring-neutral-950 dark:bg-neutral-400 dark:data-[resizing]:bg-neutral-50 dark:data-[focus-visible]:ring-neutral-300" />
+          <ColumnResizer className="data-[focus-visible]:ring-rin box-content h-5 w-px translate-x-[8px] cursor-col-resize rounded bg-neutral-500 bg-clip-content px-[8px] py-1 focus-visible:outline-none data-[resizing]:w-[2px] data-[resizing]:bg-neutral-900 data-[resizing]:pl-[7px] data-[focus-visible]:ring-1 data-[focus-visible]:ring-neutral-950 dark:bg-neutral-400 dark:data-[resizing]:bg-neutral-50 dark:data-[focus-visible]:ring-neutral-300" />
         )}
       </div>
     ))}

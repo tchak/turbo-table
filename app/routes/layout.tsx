@@ -10,7 +10,7 @@ import {
 export default function Layout() {
   const isTable = !!useMatch('/table/:id');
   return (
-    <div className="h-screen flex flex-col">
+    <div className="h-full flex flex-col">
       <header className="p-4 flex-shrink-0">
         <Navigation />
       </header>
@@ -49,8 +49,8 @@ function Navigation() {
           </BreadcrumbItem>
         ))}
         {page ? (
-          <BreadcrumbItem>
-            <BreadcrumbPage>{page.title}</BreadcrumbPage>
+          <BreadcrumbItem className="max-w-60 sm:max-w-md md:max-w-xl">
+            <BreadcrumbPage className="truncate">{page.title}</BreadcrumbPage>
           </BreadcrumbItem>
         ) : null}
       </Breadcrumbs>

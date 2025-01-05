@@ -17,7 +17,7 @@ export function TurboTableBody<T extends RowData>({
               id={cell.id}
               className={
                 cell.column.columnDef.id == 'selection'
-                  ? 'sticky left-0 z-10 bg-black'
+                  ? 'sticky left-0 z-10 bg-white dark:bg-black'
                   : ''
               }
             >

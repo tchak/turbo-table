@@ -1,6 +1,7 @@
 import type { Route } from './+types/home';
 import { TrashIcon } from 'lucide-react';
 import { z } from 'zod';
+import { Group } from 'react-aria-components';
 
 import { Button } from '~/components/ui/button';
 import { TurboUpload } from '~/components/turbo-upload';
@@ -45,7 +46,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
       >
         {(table) => (
           <GridListItem textValue={table.name} href={`/table/${table.id}`}>
-            <div className="flex items-center justify-between gap-4 w-full">
+            <Group className="flex items-center justify-between gap-4 w-full">
               <div className="truncate">{table.name}</div>
               <Button
                 variant="destructive"
@@ -56,7 +57,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
               >
                 <TrashIcon />
               </Button>
-            </div>
+            </Group>
           </GridListItem>
         )}
       </GridList>

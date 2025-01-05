@@ -37,7 +37,7 @@ export function TurboUpload({
     <DropZone onDrop={onDrop} className={className} isDisabled={isDisabled}>
       <UploadIcon
         aria-hidden="true"
-        className="mx-auto size-16 text-gray-400"
+        className="mx-auto size-16 dark:text-gray-400"
       />
       <FileTrigger
         onSelect={(fileList) => {
@@ -55,7 +55,7 @@ export function TurboUpload({
         </Link>
       </FileTrigger>
       {description ? (
-        <Text slot="label" className="text-xs/5 text-gray-400">
+        <Text slot="label" className="text-xs/5 dark:text-gray-400">
           {description}
         </Text>
       ) : null}

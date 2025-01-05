@@ -25,8 +25,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
   return (
     <html
       lang={DEFAULT_LOCALE}
-      className={`bg-white dark:bg-gray-950 h-full ${
-        isTable ? 'overflow-hidden' : ''
+      className={`bg-white dark:bg-gray-950 ${
+        isTable ? 'overflow-hidden h-dvh' : ''
       }`}
     >
       <head>
@@ -36,7 +36,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <Links />
         <PlausibleScript />
       </head>
-      <body>
+      <body className="h-full">
         {children}
         <ScrollRestoration />
         <Scripts />

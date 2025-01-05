@@ -14,13 +14,13 @@ export function TurboPagination<T extends RowData>({
   table: Table<T>;
 }) {
   return (
-    <div className="flex justify-between items-center px-2">
-      <div>
+    <div className="flex justify-around md:justify-between items-center p-2">
+      <div className="hidden md:block">
         {`Total pages: ${
           table.getState().pagination.pageIndex + 1
         } / ${table.getPageCount()}`}
       </div>
-      <div className="flex items-center">
+      <div className="flex items-center gap-4 md:gap-2">
         <Link
           variant="link"
           onPress={() => table.firstPage()}
@@ -50,7 +50,7 @@ export function TurboPagination<T extends RowData>({
           <ChevronLastIcon />
         </Link>
       </div>
-      <div>Total rows: {table.getRowCount()}</div>
+      <div className="hidden md:block">Total rows: {table.getRowCount()}</div>
     </div>
   );
 }

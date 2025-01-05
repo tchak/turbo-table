@@ -2,15 +2,16 @@
 @tailwind components;
 @tailwind utilities;
 
-html,
-body {
-  @media (prefers-color-scheme: dark) {
-    color-scheme: dark;
-  }
-}
-
 @layer base {
   :root {
     --radius: 0.5rem;
+  }
+
+  html,
+  body {
+    -webkit-tap-highlight-color: transparent;
+    @media (prefers-color-scheme: dark) {
+      color-scheme: dark;
+    }
   }
 }

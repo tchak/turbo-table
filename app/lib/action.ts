@@ -13,7 +13,7 @@ export function useActionFetcher() {
   useEffect(() => {
     if (fetcher.data?.error) {
       toastQueue.add(
-        { message: fetcher.data.error.message },
+        { title: fetcher.data.error.message },
         { timeout: 10 * 1000 }
       );
     }
