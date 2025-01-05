@@ -48,7 +48,7 @@ export function TurboTable({
 
   return (
     <div className="flex flex-col h-full">
-      <TurboTableToolbar table={table} />
+      <TurboTableToolbar table={table} canHideColumns />
       <ResizableTableContainer
         onResize={onResize}
         className="overflow-auto flex-1"
